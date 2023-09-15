@@ -1,0 +1,99 @@
+version: '3'
+services:
+    # db:
+    #     image: 'postgres' # use latest official postgres version
+    #     env_file: .env
+    #     ports:
+    #         - 5432:5432
+    #     volumes:
+    #         - ./database-data:/var/lib/postgresql/data/ # persist data even if container shuts down
+
+    web-server:
+        build: ./packages/web-server
+        command: python manage.py runserver 0:8000
+        env_file: .env
+        volumes:
+            - ./packages/web-server/src:/home/app/web/
+        expose:
+            - 8000
+        ports:
+            - 8000:8000
+        #depends_on:
+        #- db
+        #- elasticsearch
+
+    # media-server:
+    #     build: ./packages/media-server
+    #     command: python main.py
+    #     env_file: .env
+    #     # volumes:
+    #     #     - ./packages/media-server/src:/code
+    #     ports:
+    #         - 8001:8001
+    #     expose:
+    #         - 8001
+
+    face-embedding-server:
+        build: ./packages/face-embedding-server
+        # volumes:
+        #     - ./packages/face-embedding-server/:/app/
+        environment:
+            - FLASK_PORT=5000
+        ports:
+            - 5000:5000
+        expose:
+            - 5000
+
+    voice-embedding-server:
+        build: ./packages/voice-embedding-server
+        # volumes:
+        #     - ./packages/voice-embedding-server/:/app/
+        environment:
+            - FLASK_PORT=5001
+        ports:
+            - 5001:5001
+        expose:
+            - 5001
+
+    text-embedding-server:
+        build: ./packages/text-embedding-server
+        environment:
+            - FLASK_PORT=5002
+        ports:
+            - 5002:5002
+        expose:
+            - 5002
+
+    elasticsearch:
+        image: elasticsearch:7.8.0
+        environment:
+            - discovery.type=single-node
+        volumes:
+            - elasticsearch:/usr/share/elasticsearch/data
+        ports:
+            - 9200:9200
+            - 9300:9300
+        expose:
+            - 9200
+            - 9300
+
+    kib01:
+        image: docker.elastic.co/kibana/kibana:7.8.0
+        container_name: kib01
+        ports:
+            - 5601:5601
+        environment:
+            ELASTICSEARCH_URL: http://elasticsearch:9200
+            ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+
+    nginx:
+        build: ./packages/nginx
+        ports:
+            - 443:443
+        depends_on:
+            - web-server
+            # - media-server
+
+volumes:
+    elasticsearch:
+        driver: local

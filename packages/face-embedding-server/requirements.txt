@@ -1,0 +1,10 @@
+tensorflow==1.7
+scipy
+scikit-learn
+h5py
+matplotlib
+Pillow
+requests
+psutil
+flask
+opencv-python-headless==4.2.0.34
